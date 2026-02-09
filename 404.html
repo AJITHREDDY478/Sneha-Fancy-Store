@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Sneha Fancy Store</title>
+    <script>
+      // Redirect to the main app, preserving the route
+      // GitHub Pages serves this 404.html for non-existent routes
+      // We capture the pathname and redirect to index.html with it
+      var pathSegments = window.location.pathname.split('/').filter(Boolean);
+      var route = '/' + pathSegments.slice(1).join('/');
+      
+      // Redirect to Store with the route passed as a search parameter
+      sessionStorage.redirect = route;
+      
+      // Redirect to the root of your app (which is /Store/)
+      window.location.href = '/Store/';
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
