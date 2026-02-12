@@ -310,21 +310,6 @@ function Products() {
                       >
                         ✏️
                       </button>
-                      <button 
-                        onClick={() => handleDelete(product.id)} 
-                        title="Delete"
-                        style={{ 
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '1rem',
-                          padding: '0.20rem',
-                          color: 'inherit',
-                          lineHeight: '1'
-                        }}
-                      >
-                        🗑️
-                      </button>
                     </div>
                   </td>
                 </tr>
