@@ -5,6 +5,25 @@ class StorageService {
     this.BILLS_KEY = 'billing_bills';
   }
 
+  dedupeBillsByNumber(bills) {
+    const byNumber = new Map();
+    bills.forEach((bill) => {
+      const key = String(bill.bill_number || '').trim();
+      if (!key) return;
+      const existing = byNumber.get(key);
+      if (!existing) {
+        byNumber.set(key, bill);
+        return;
+      }
+      const existingDate = new Date(existing.created_at || 0).getTime();
+      const incomingDate = new Date(bill.created_at || 0).getTime();
+      if (incomingDate >= existingDate) {
+        byNumber.set(key, bill);
+      }
+    });
+    return Array.from(byNumber.values());
+  }
+
   // Products
   getAllProducts() {
     const data = localStorage.getItem(this.PRODUCTS_KEY);
@@ -36,17 +55,27 @@ class StorageService {
   // Bills
   getAllBills() {
     const data = localStorage.getItem(this.BILLS_KEY);
-    return data ? JSON.parse(data) : [];
+    const bills = data ? JSON.parse(data) : [];
+    const deduped = this.dedupeBillsByNumber(bills);
+    if (deduped.length !== bills.length) {
+      this.setAllBills(deduped);
+    }
+    return deduped;
   }
 
   setAllBills(bills) {
-    localStorage.setItem(this.BILLS_KEY, JSON.stringify(bills));
+    const deduped = this.dedupeBillsByNumber(bills);
+    localStorage.setItem(this.BILLS_KEY, JSON.stringify(deduped));
   }
 
   addBill(bill) {
-    const bills = this.getAllBills();
+    const bills = this.getAllBills().filter((b) => b.bill_number !== bill.bill_number);
     bills.push(bill);
-    localStorage.setItem(this.BILLS_KEY, JSON.stringify(bills));
+    this.setAllBills(bills);
+  }
+
+  clearBills() {
+    this.setAllBills([]);
   }
 
   // Stats

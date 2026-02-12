@@ -59,8 +59,8 @@ body {
 }
 
 .nav-logo {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -70,6 +70,7 @@ body {
   gap: 0.5rem;
   flex-wrap: wrap;
   width: 100%;
+  margin-top: 0.5rem;
 }
 
 .nav-links a {

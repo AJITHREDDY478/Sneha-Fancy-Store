@@ -93,6 +93,27 @@ function CreateBill() {
     setItems(items.filter(i => i.product_id !== productId));
   };
 
+  const getNextBillNumber = (existingBills) => {
+    let maxNumber = 0;
+    existingBills.forEach((bill) => {
+      const match = String(bill.bill_number || '').match(/(\d+)$/);
+      if (!match) return;
+      const value = parseInt(match[1], 10);
+      if (!Number.isNaN(value) && value > maxNumber) {
+        maxNumber = value;
+      }
+    });
+
+    const existingSet = new Set(existingBills.map((bill) => String(bill.bill_number || '').trim()));
+    let nextNumber = maxNumber + 1;
+    let candidate = `SS${String(nextNumber).padStart(2, '0')}`;
+    while (existingSet.has(candidate)) {
+      nextNumber += 1;
+      candidate = `SS${String(nextNumber).padStart(2, '0')}`;
+    }
+    return candidate;
+  };
+
   const createBill = async () => {
     if (items.length === 0) {
       alert('Add at least one item!');
@@ -100,7 +121,6 @@ function CreateBill() {
     }
 
     const existingBills = storage.getAllBills();
-    const billCount = (existingBills.length + 1).toString().padStart(2, '0');
     
     const subtotalAmount = items.reduce((sum, item) => sum + item.total, 0);
     const discountAmount = parseFloat(discount) || 0;
@@ -114,7 +134,7 @@ function CreateBill() {
     
     const bill = {
       id: uuidv4(),
-      bill_number: `SS${billCount}`,
+      bill_number: getNextBillNumber(existingBills),
       customer_name: customer.name,
       customer_phone: customer.phone,
       items: items,

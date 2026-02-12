@@ -182,3 +182,7 @@ export const appendBillsToSheet = async (bills) => {
   }));
   return postRows('bills', rows);
 };
+
+export const deleteAllBillsFromSheet = async () => {
+  return postPayload({ type: 'bills', action: 'deleteAll' });
+};

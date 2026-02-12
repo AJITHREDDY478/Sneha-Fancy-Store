@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import storage from '../storage';
-import { fetchSheetsData, mapSheetBills } from '../sheetsService';
+import { fetchSheetsData, mapSheetBills, deleteAllBillsFromSheet } from '../sheetsService';
 import { formatDate, formatDateTime } from '../dateUtils';
 
 function Bills() {
@@ -16,6 +16,7 @@ function Bills() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [syncing, setSyncing] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -76,6 +77,25 @@ function Bills() {
       alert('Could not sync bills from Google Sheets: ' + error.message);
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm('Delete all bills from local storage and Google Sheets? This cannot be undone.')) {
+      return;
+    }
+    setClearing(true);
+    try {
+      await deleteAllBillsFromSheet();
+      storage.clearBills();
+      setBills([]);
+      setSelected(null);
+      alert('All bills deleted.');
+    } catch (error) {
+      console.error('Delete bills error:', error);
+      alert('Could not delete bills from Google Sheets. Please update the Apps Script and try again.');
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -238,6 +258,19 @@ function Bills() {
           }}
         >
           {syncing ? 'Syncing...' : 'Sync'}
+        </button>
+        <button
+          onClick={handleClearAll}
+          disabled={clearing}
+          className="btn btn-danger"
+          style={{
+            padding: '0.5rem 0.75rem',
+            fontSize: '0.85rem',
+            minWidth: 'auto',
+            width: 'auto'
+          }}
+        >
+          {clearing ? 'Deleting...' : 'Delete All'}
         </button>
         <h1 className="page-title" style={{ margin: 0, padding: 0, border: 'none', background: 'transparent' }}>Bills</h1>
       </div>
