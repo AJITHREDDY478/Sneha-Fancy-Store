@@ -18,6 +18,13 @@ function doGet(e) {
   }
 }
 
+// Handle CORS preflight requests
+function doOptions(e) {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
 function doPost(e) {
   try {
     var ss = SpreadsheetApp.openById('1BlPwtkumqhEkhSs55Uj0QY7ILI4HH7SyIlWE29dqmlU');
@@ -183,9 +190,13 @@ function getSheetData_(ss, sheetName) {
 }
 
 function json_(obj) {
-  return ContentService
+  var output = ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+  
+  // Add CORS headers
+  output.append(''); // CORS is handled by Apps Script automatically for doPost
+  return output;
 }
 
 // Initialize Users sheet with proper columns
