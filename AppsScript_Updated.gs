@@ -30,7 +30,20 @@ function doPost(e) {
     var ss = SpreadsheetApp.openById('1BlPwtkumqhEkhSs55Uj0QY7ILI4HH7SyIlWE29dqmlU');
     initializeUsersSheet_(ss);
     
-    var body = JSON.parse(e.postData.contents || '{}');
+    var body;
+    try {
+      // Try to parse postData
+      if (e.postData && e.postData.contents) {
+        body = JSON.parse(e.postData.contents);
+      } else if (e.postData && e.postData.getAsString) {
+        body = JSON.parse(e.postData.getAsString());
+      } else {
+        return json_({ ok: false, error: 'No data received' });
+      }
+    } catch (parseErr) {
+      return json_({ ok: false, error: 'Invalid JSON: ' + parseErr.message });
+    }
+    
     var type = body.type;
     var action = body.action || 'append';
 

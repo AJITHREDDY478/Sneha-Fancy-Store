@@ -13,9 +13,15 @@ function Login({ onLogin }) {
     setLoading(true);
 
     try {
+      console.log('Logging in with:', { username, password });
+      console.log('Using API URL:', import.meta.env.VITE_SHEETS_WEB_APP_URL);
+      
       const response = await fetch(import.meta.env.VITE_SHEETS_WEB_APP_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors',
+        headers: { 
+          'Content-Type': 'text/plain'
+        },
         body: JSON.stringify({
           type: 'auth',
           action: 'login',
@@ -24,7 +30,12 @@ function Login({ onLogin }) {
         })
       });
 
-      const data = await response.json();
+      console.log('Response status:', response.status);
+      const text = await response.text();
+      console.log('Response text:', text);
+      
+      const data = JSON.parse(text);
+      console.log('Parsed response:', data);
 
       if (data.ok && data.user) {
         // Store user session
@@ -35,6 +46,7 @@ function Login({ onLogin }) {
       }
     } catch (err) {
       console.error('Login error:', err);
+      console.error('Error message:', err.message);
       setError('Connection error. Please try again.');
     } finally {
       setLoading(false);
