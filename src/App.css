@@ -39,6 +39,11 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .navbar-top {
@@ -264,6 +269,19 @@ body {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+  padding-top: 180px;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding-top: 220px;
+  }
 }
 
 .page-title {
