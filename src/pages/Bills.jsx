@@ -131,7 +131,7 @@ function Bills() {
     // Add logo and header
     doc.setFontSize(20);
     doc.setTextColor(79, 70, 229);
-    doc.text('Store', 105, 15, { align: 'center' });
+    doc.text('Sneha Fancy Store', 105, 15, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
@@ -196,7 +196,7 @@ function Bills() {
           await navigator.share({
             files: [file],
             title: 'Bill Receipt',
-            text: `Receipt from Store - Bill No: ${selected.bill_number}`
+            text: `Receipt from Sneha Fancy Store - Bill No: ${selected.bill_number}`
           });
         } else {
           // Fallback: Download and open WhatsApp
@@ -255,8 +255,8 @@ function Bills() {
           
           <div className="receipt">
             <div className="receipt-header">
-              <img src={`${import.meta.env.BASE_URL}store.png`} alt="Store" className="receipt-logo" />
-              <h1>Store</h1>
+              <img src={`${import.meta.env.BASE_URL}ss.jpg`} alt="Sneha Fancy Store" className="receipt-logo" />
+              <h1>Sneha Fancy Store</h1>
               <p style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>Opposite to Vaishnavi Hotel, Shahapur, Karnataka 585223</p>
               <p style={{ fontSize: '0.85rem', color: '#666' }}>Phone: 087926 85004</p>
             </div>

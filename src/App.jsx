@@ -113,8 +113,8 @@ function AppContent() {
       <nav className="navbar">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <h1 style={{ margin: 0 }}>
-            <img src={`${import.meta.env.BASE_URL}store.png`} alt="Logo" className="nav-logo" />
-            Store
+            <img src={`${import.meta.env.BASE_URL}ss.jpg`} alt="Sneha Fancy Store logo" className="nav-logo" />
+            Sneha Fancy Store
           </h1>
           <div style={{ fontSize: '14px', color: '#666' }}>
             {formatDateTime(currentDateTime)}
