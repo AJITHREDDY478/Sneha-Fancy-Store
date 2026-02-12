@@ -230,11 +230,27 @@ function handleAuth_(ss, body) {
       return json_({ ok: false, error: 'User account is inactive' });
     }
     
+    // Auto-generate UUID if Id is empty
+    var userId = user.Id;
+    if (!userId || userId === '') {
+      userId = Utilities.getUuid();
+      // Update the sheet with the new UUID
+      var data = usersSheet.getDataRange().getValues();
+      var headers = data[0];
+      var idIndex = headers.indexOf('Id');
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][headers.indexOf('Username')] === username) {
+          usersSheet.getRange(i + 1, idIndex + 1).setValue(userId);
+          break;
+        }
+      }
+    }
+    
     // Return user info (without password)
     return json_({ 
       ok: true, 
       user: {
-        id: user.Id,
+        id: userId,
         username: user.Username,
         fullName: user['Full Name'],
         role: user.Role,
