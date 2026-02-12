@@ -1,6 +1,8 @@
 function doGet(e) {
   try {
     var ss = SpreadsheetApp.openById('1BlPwtkumqhEkhSs55Uj0QY7ILI4HH7SyIlWE29dqmlU');
+    initializeUsersSheet_(ss);
+    
     var products = getSheetData_(ss, 'Products');
     var bills = getSheetData_(ss, 'Bills');
 
@@ -19,10 +21,23 @@ function doGet(e) {
 function doPost(e) {
   try {
     var ss = SpreadsheetApp.openById('1BlPwtkumqhEkhSs55Uj0QY7ILI4HH7SyIlWE29dqmlU');
+    initializeUsersSheet_(ss);
+    
     var body = JSON.parse(e.postData.contents || '{}');
     var type = body.type;
-    var rows = body.rows || [];
     var action = body.action || 'append';
+
+    // Handle authentication/login
+    if (type === 'auth') {
+      return handleAuth_(ss, body);
+    }
+
+    // Handle user management (admin only)
+    if (type === 'users') {
+      return handleUserManagement_(ss, body);
+    }
+
+    var rows = body.rows || [];
     var ids = body.ids || [];
 
     if (!type) {
@@ -171,4 +186,134 @@ function json_(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Initialize Users sheet with proper columns
+function initializeUsersSheet_(ss) {
+  var usersSheet = ss.getSheetByName('Users');
+  
+  if (!usersSheet) {
+    usersSheet = ss.insertSheet('Users', ss.getSheets().length);
+    var headers = ['Id', 'Username', 'Password', 'Full Name', 'Role', 'Shop Name', 'Email', 'Phone', 'Status', 'Created Date', 'LastLogin'];
+    usersSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    
+    // Add default admin user (admin/admin123)
+    var adminId = Utilities.getUuid();
+    var hashedPass = Utilities.getUuid().substring(0, 10);
+    usersSheet.appendRow([adminId, 'admin', hashedPass, 'Admin User', 'Admin', '', 'admin@store.com', '', 'active', new Date(), new Date()]);
+  }
+}
+
+// Handle authentication (login)
+function handleAuth_(ss, body) {
+  var action = body.action;
+  
+  if (action === 'login') {
+    var username = body.username;
+    var password = body.password;
+    
+    var usersSheet = ss.getSheetByName('Users');
+    if (!usersSheet) {
+      return json_({ ok: false, error: 'Users sheet not found' });
+    }
+    
+    var usersData = getSheetData_(ss, 'Users');
+    var user = usersData.find(function(u) {
+      return u.Username === username;
+    });
+    
+    if (!user || user.Password !== password) {
+      return json_({ ok: false, error: 'Invalid username or password' });
+    }
+    
+    if (user.Status !== 'active') {
+      return json_({ ok: false, error: 'User account is inactive' });
+    }
+    
+    // Return user info (without password)
+    return json_({ 
+      ok: true, 
+      user: {
+        id: user.Id,
+        username: user.Username,
+        fullName: user['Full Name'],
+        role: user.Role,
+        shopName: user['Shop Name'],
+        email: user.Email
+      }
+    });
+  }
+  
+  return json_({ ok: false, error: 'Invalid auth action' });
+}
+
+// Handle user management (admin only)
+function handleUserManagement_(ss, body) {
+  var action = body.action;
+  
+  if (action === 'getUsers') {
+    var usersData = getSheetData_(ss, 'Users');
+    var usersWithoutPasswords = usersData.map(function(u) {
+      var userCopy = {};
+      for (var key in u) {
+        if (key !== 'Password') {
+          userCopy[key] = u[key];
+        }
+      }
+      return userCopy;
+    });
+    return json_({ ok: true, users: usersWithoutPasswords });
+  }
+  
+  if (action === 'createUser') {
+    var newUser = body.user;
+    var usersSheet = ss.getSheetByName('Users');
+    var headers = usersSheet.getRange(1, 1, 1, usersSheet.getLastColumn()).getValues()[0];
+    
+    var userId = Utilities.getUuid();
+    var values = headers.map(function(h) {
+      if (h === 'Id') return userId;
+      if (h === 'Created Date') return new Date();
+      if (h === 'LastLogin') return new Date();
+      return newUser[h] || '';
+    });
+    
+    usersSheet.appendRow(values);
+    return json_({ ok: true, message: 'User created', userId: userId });
+  }
+  
+  if (action === 'updateUser') {
+    var userId = body.userId;
+    var updatedData = body.user;
+    var usersSheet = ss.getSheetByName('Users');
+    var headers = usersSheet.getRange(1, 1, 1, usersSheet.getLastColumn()).getValues()[0];
+    var data = usersSheet.getDataRange().getValues();
+    
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] === userId) {
+        var rowData = headers.map(function(h) {
+          return updatedData[h] !== undefined ? updatedData[h] : data[i][headers.indexOf(h)];
+        });
+        usersSheet.getRange(i + 1, 1, 1, rowData.length).setValues([rowData]);
+        return json_({ ok: true, message: 'User updated' });
+      }
+    }
+    return json_({ ok: false, error: 'User not found' });
+  }
+  
+  if (action === 'deleteUser') {
+    var userId = body.userId;
+    var usersSheet = ss.getSheetByName('Users');
+    var data = usersSheet.getDataRange().getValues();
+    
+    for (var i = data.length - 1; i >= 1; i--) {
+      if (data[i][0] === userId) {
+        usersSheet.deleteRow(i + 1);
+        return json_({ ok: true, message: 'User deleted' });
+      }
+    }
+    return json_({ ok: false, error: 'User not found' });
+  }
+  
+  return json_({ ok: false, error: 'Invalid user management action' });
 }
