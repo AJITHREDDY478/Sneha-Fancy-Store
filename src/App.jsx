@@ -119,39 +119,30 @@ function AppContent() {
   return (
     <div className="app">
       <nav className="navbar">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+        <div className="navbar-top">
           <h1 style={{ margin: 0 }}>
             <img src={`${import.meta.env.BASE_URL}ss.jpg`} alt="Sneha Fancy Store logo" className="nav-logo" />
             {user.shopName || 'Sneha Fancy Store'}
           </h1>
-          <div style={{ fontSize: '14px', color: '#666' }}>
-            {formatDateTime(currentDateTime)}
+          <div className="navbar-time-user">
+            <div className="navbar-time">{formatDateTime(currentDateTime)}</div>
+            <div className="navbar-user">
+              <span>{user.fullName} ({user.role})</span>
+              <button
+                onClick={handleLogout}
+                className="btn-logout"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
-        <div className="nav-links" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <Link to="/">Dashboard</Link>
-            <Link to="/products">Products</Link>
-            <Link to="/create-bill">New Bill</Link>
-            <Link to="/bills">Bills</Link>
-            {user.role === 'Admin' && <Link to="/users">Users</Link>}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.9rem' }}>
-            <span style={{ color: '#666' }}>{user.fullName} ({user.role})</span>
-            <button
-              onClick={handleLogout}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#d32f2f',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
-                textDecoration: 'underline'
-              }}
-            >
-              Logout
-            </button>
-          </div>
+        <div className="nav-links">
+          <Link to="/">Dashboard</Link>
+          <Link to="/products">Products</Link>
+          <Link to="/create-bill">New Bill</Link>
+          <Link to="/bills">Bills</Link>
+          {user.role === 'Admin' && <Link to="/users">Users</Link>}
         </div>
       </nav>
 
