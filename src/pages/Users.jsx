@@ -339,7 +339,7 @@ export default function Users() {
                       title="Select all"
                     />
                   </th>
-                  <th>Username</th>
+                  <th>Full Name</th>
                   <th>Role</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -355,7 +355,7 @@ export default function Users() {
                         onChange={() => handleCheckboxChange(user.Id)}
                       />
                     </td>
-                    <td>{user.Username}</td>
+                    <td>{user['Full Name']}</td>
                     <td>
                       <span className={`badge badge-${user.Role.toLowerCase()}`}>
                         {user.Role}

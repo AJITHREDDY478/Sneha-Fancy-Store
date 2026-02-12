@@ -127,7 +127,7 @@ function AppContent() {
           <div className="navbar-time-user">
             <div className="navbar-time">{formatDateTime(currentDateTime)}</div>
             <div className="navbar-user">
-              <span>{user.fullName} ({user.role})</span>
+              <span>{user.fullName}</span>
               <button
                 onClick={handleLogout}
                 className="btn-logout"
