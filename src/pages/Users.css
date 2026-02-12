@@ -277,6 +277,9 @@
   .checkbox-cell input[type="checkbox"] {
     width: 16px;
     height: 16px;
+  }
+}
+
 .badge-admin {
   background: #fff3e0;
   color: #e65100;
