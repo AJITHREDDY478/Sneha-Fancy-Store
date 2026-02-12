@@ -180,10 +180,24 @@
   }
 }
 
-.users-list h3 {
-  margin-top: 0;
-  color: #333;
+.users-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.users-list h3 {
+  margin: 0;
+  color: #333;
+}
+
+@media (max-width: 640px) {
+  .users-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .users-table {
@@ -207,10 +221,34 @@
   font-size: 0.95rem;
 }
 
+.users-table th input[type="checkbox"] {
+  cursor: pointer;
+}
+
 .users-table td {
   padding: 1rem;
   border-bottom: 1px solid #e0e0e0;
   font-size: 0.95rem;
+}
+
+.users-table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.users-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.checkbox-cell {
+  text-align: center;
+  padding: 1rem 0.5rem;
+}
+
+.checkbox-cell input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: #1976d2;
 }
 
 @media (max-width: 768px) {
@@ -225,32 +263,20 @@
   .users-table {
     font-size: 0.85rem;
   }
-  
+
   .users-table th,
   .users-table td {
     padding: 0.5rem;
     font-size: 0.8rem;
   }
-}
 
-.users-table tbody tr:hover {
-  background: #f9f9f9;
-}
+  .checkbox-cell {
+    padding: 0.5rem 0.25rem;
+  }
 
-.users-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-/* Badge Styles */
-.badge {
-  display: inline-block;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
+  .checkbox-cell input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
 .badge-admin {
   background: #fff3e0;
   color: #e65100;
@@ -281,10 +307,49 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: background 0.3s ease;
+  white-space: nowrap;
 }
 
 .btn-delete:hover {
   background: #b71c1c;
+}
+
+.btn-bulk-delete {
+  padding: 0.6rem 1.2rem;
+  background: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-bulk-delete:hover {
+  background: #b71c1c;
+}
+
+@media (max-width: 640px) {
+  .btn-bulk-delete {
+    width: 100%;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-delete {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-bulk-delete {
+    width: 100%;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.75rem;
+  }
 }
 
 /* Alert Styles */

@@ -9,6 +9,7 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState(new Set());
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -150,6 +151,68 @@ export default function Users() {
     }
   };
 
+  const handleCheckboxChange = (userId) => {
+    const newSelected = new Set(selectedUsers);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
+    }
+    setSelectedUsers(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.size === users.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(users.map(u => u.Id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.size === 0) {
+      setError('Please select at least one user to delete');
+      return;
+    }
+
+    if (!window.confirm(`Delete ${selectedUsers.size} selected user(s)?`)) {
+      return;
+    }
+
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      for (const userId of selectedUsers) {
+        const response = await fetch(VITE_SHEETS_WEB_APP_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            type: 'users',
+            action: 'deleteUser',
+            userId: userId
+          })
+        });
+
+        const text = await response.text();
+        const data = JSON.parse(text);
+
+        if (!data.ok) {
+          setError(`Error deleting user: ${data.error}`);
+          return;
+        }
+      }
+
+      setSuccessMessage(`${selectedUsers.size} user(s) deleted successfully!`);
+      setSelectedUsers(new Set());
+      setTimeout(() => fetchUsers(), 500);
+    } catch (err) {
+      console.error('Error bulk deleting users:', err);
+      setError('Error deleting users: ' + err.message);
+    }
+  };
+
   return (
     <div className="users-container">
       <h2>Manage Users</h2>
@@ -252,7 +315,14 @@ export default function Users() {
 
         {/* Users List */}
         <div className="users-list">
-          <h3>Existing Users</h3>
+          <div className="users-list-header">
+            <h3>Existing Users</h3>
+            {selectedUsers.size > 0 && (
+              <button onClick={handleBulkDelete} className="btn-bulk-delete">
+                Delete {selectedUsers.size} Selected
+              </button>
+            )}
+          </div>
           {loading ? (
             <p>Loading users...</p>
           ) : users.length === 0 ? (
@@ -261,19 +331,31 @@ export default function Users() {
             <table className="users-table">
               <thead>
                 <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.size === users.length && users.length > 0}
+                      onChange={handleSelectAll}
+                      title="Select all"
+                    />
+                  </th>
                   <th>Username</th>
-                  <th>Full Name</th>
                   <th>Role</th>
                   <th>Status</th>
-                  <th>Email</th>
-                  <th>Action</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
                   <tr key={user.Id}>
+                    <td className="checkbox-cell">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.has(user.Id)}
+                        onChange={() => handleCheckboxChange(user.Id)}
+                      />
+                    </td>
                     <td>{user.Username}</td>
-                    <td>{user['Full Name']}</td>
                     <td>
                       <span className={`badge badge-${user.Role.toLowerCase()}`}>
                         {user.Role}
@@ -284,7 +366,6 @@ export default function Users() {
                         {user.Status}
                       </span>
                     </td>
-                    <td>{user.Email}</td>
                     <td>
                       <button
                         onClick={() => handleDeleteUser(user.Id)}
