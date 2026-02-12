@@ -5,6 +5,7 @@ import Products from './pages/Products';
 import CreateBill from './pages/CreateBill';
 import Bills from './pages/Bills';
 import RevenueChart from './pages/RevenueChart';
+import Users from './pages/Users';
 import Login from './pages/Login';
 import { formatDateTime } from './dateUtils';
 import storage from './storage';
@@ -133,6 +134,7 @@ function AppContent() {
             <Link to="/products">Products</Link>
             <Link to="/create-bill">New Bill</Link>
             <Link to="/bills">Bills</Link>
+            {user.role === 'Admin' && <Link to="/users">Users</Link>}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.9rem' }}>
             <span style={{ color: '#666' }}>{user.fullName} ({user.role})</span>
@@ -166,6 +168,7 @@ function AppContent() {
           <Route path="/create-bill" element={<CreateBill />} />
           <Route path="/bills" element={<Bills />} />
           <Route path="/revenue-chart" element={<RevenueChart />} />
+          <Route path="/users" element={<Users />} />
         </Routes>
       </main>
     </div>
