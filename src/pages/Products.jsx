@@ -9,11 +9,14 @@ function Products() {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadProducts();
   }, []);
 
+    setSelectedProducts(new Set());
   const loadProducts = () => {
     setProducts(storage.getAllProducts());
   };
@@ -113,7 +116,51 @@ function Products() {
         console.error('Error deleting product:', error);
         alert('Error deleting product. Please try again.');
       }
+    
+
+  const toggleSelectAll = () => {
+    if (selectedProducts.size === products.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(products.map(p => p.id)));
     }
+  };
+
+  const toggleSelectProduct = (id) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedProducts.size === 0) {
+      alert('No products selected!');
+      return;
+    }
+
+    if (!confirm(`Delete ${selectedProducts.size} selected product(s)?`)) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      for (const id of selectedProducts) {
+        await deleteProductFromSheet(id);
+        storage.deleteProduct(id);
+      }
+      loadProducts();
+      alert(`${selectedProducts.size} product(s) deleted successfully!`);
+    } catch (error) {
+      console.error('Error deleting products:', error);
+      alert('Error deleting some products. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };}
   };
 
   return (
@@ -148,26 +195,58 @@ function Products() {
             />
           </div>
           <div className="form-group">
-            <label>Product Code</label>
-            <input
-              type="text"
-              value={form.code}
-              onChange={(e) => setForm({ ...form, code: e.target.value })}
-              placeholder="Unique code for lookup"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Price (₹)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
+         div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0 }}>Product List</h2>
+          {selectedProducts.size > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+              className="btn btn-danger"
+              style={{
+                padding: '0.5rem 0.75rem',
+                fontSize: '0.85rem',
+                width: 'auto'
+              }}
+            >
+              {deleting ? 'Deleting...' : `Delete Selected (${selectedProducts.size})`}
+            </button>
+          )}
+        </div>
+        {products.length === 0 ? (
+          <p>No products yet. Add your first product above!</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th style={{ width: '5%', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedProducts.size === products.length && products.length > 0}
+                    onChange={toggleSelectAll}
+                    style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                  />
+                </th>
+                <th style={{ width: '27%' }}>Name</th>
+                <th style={{ width: '15%' }}>Code</th>
+                <th style={{ width: '18%' }}>Price</th>
+                <th style={{ width: '15%' }}>Stock</th>
+                <th style={{ width: '20%', textAlign: 'center' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map(product => (
+                <tr key={product.id}>
+                  <td style={{ width: '5%', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.has(product.id)}
+                      onChange={() => toggleSelectProduct(product.id)}
+                      style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                    />
+                  </td>
+                  <td style={{ width: '27%' }}>{product.name}</td>
+                  <td style={{ width: '15%', color: '#666' }}>{product.code || '-'}</td>
+                  <td style={{ width: '18
             <label>Stock</label>
             <input
               type="number"
