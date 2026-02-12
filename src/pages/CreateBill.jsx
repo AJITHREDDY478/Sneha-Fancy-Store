@@ -148,38 +148,43 @@ function CreateBill() {
       created_at: new Date().toISOString()
     };
 
-    storage.addBill(bill);
-
-    appendBillToSheet(bill).catch((error) => {
-      console.warn('Bill sync failed.', error);
-    });
-
-    // Update stock
-    items.forEach(item => {
-      if (!item.manual) {
-        const product = products.find(p => p.id === item.product_id);
-        if (product) {
-          const newStock = product.stock - item.quantity;
-          storage.updateProduct(item.product_id, {
-            stock: newStock
-          });
-          
-          const updatedProduct = storage.getAllProducts().find(p => p.id === item.product_id);
-          if (updatedProduct) {
-            upsertProductToSheet(updatedProduct).catch((error) => {
-              console.warn('Stock update sync failed.', error);
-            });
+    try {
+      // Save bill to Sheets first
+      await appendBillToSheet(bill);
+      
+      // Update stock in Sheets for non-manual items
+      for (const item of items) {
+        if (!item.manual) {
+          const product = products.find(p => p.id === item.product_id);
+          if (product) {
+            const newStock = product.stock - item.quantity;
+            const updatedProduct = { ...product, stock: newStock, updated_at: new Date().toISOString() };
+            await upsertProductToSheet(updatedProduct);
           }
         }
       }
-    });
-
-    alert('Bill created successfully!');
-    setItems([]);
-    setCustomer({ name: '', phone: '' });
-    setDiscount('');
-    setTax('');
-    setProducts(storage.getAllProducts());
+      
+      // Update local cache
+      storage.addBill(bill);
+      items.forEach(item => {
+        if (!item.manual) {
+          const product = products.find(p => p.id === item.product_id);
+          if (product) {
+            storage.updateProduct(item.product_id, { stock: product.stock - item.quantity });
+          }
+        }
+      });
+      
+      alert('Bill created successfully!');
+      setItems([]);
+      setCustomer({ name: '', phone: '' });
+      setDiscount('');
+      setTax('');
+      setProducts(storage.getAllProducts());
+    } catch (error) {
+      console.error('Error creating bill:', error);
+      alert('Error creating bill. Please try again.');
+    }
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);

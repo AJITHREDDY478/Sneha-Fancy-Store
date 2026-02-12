@@ -1,81 +1,51 @@
-// localStorage wrapper for billing app
+// In-memory cache for Sheets data
 class StorageService {
   constructor() {
-    this.PRODUCTS_KEY = 'billing_products';
-    this.BILLS_KEY = 'billing_bills';
-  }
-
-  dedupeBillsByNumber(bills) {
-    const byNumber = new Map();
-    bills.forEach((bill) => {
-      const key = String(bill.bill_number || '').trim();
-      if (!key) return;
-      const existing = byNumber.get(key);
-      if (!existing) {
-        byNumber.set(key, bill);
-        return;
-      }
-      const existingDate = new Date(existing.created_at || 0).getTime();
-      const incomingDate = new Date(bill.created_at || 0).getTime();
-      if (incomingDate >= existingDate) {
-        byNumber.set(key, bill);
-      }
-    });
-    return Array.from(byNumber.values());
+    this.productsCache = [];
+    this.billsCache = [];
+    this.isInitialized = false;
   }
 
   // Products
   getAllProducts() {
-    const data = localStorage.getItem(this.PRODUCTS_KEY);
-    return data ? JSON.parse(data) : [];
+    return this.productsCache;
   }
 
   setAllProducts(products) {
-    localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
+    this.productsCache = products;
   }
 
   addProduct(product) {
-    const products = this.getAllProducts();
-    products.push(product);
-    localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
+    this.productsCache.push(product);
   }
 
   updateProduct(id, updates) {
-    let products = this.getAllProducts();
-    products = products.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p);
-    localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
+    this.productsCache = this.productsCache.map(p => 
+      p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p
+    );
   }
 
   deleteProduct(id) {
-    let products = this.getAllProducts();
-    products = products.filter(p => p.id !== id);
-    localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
+    this.productsCache = this.productsCache.filter(p => p.id !== id);
   }
 
   // Bills
   getAllBills() {
-    const data = localStorage.getItem(this.BILLS_KEY);
-    const bills = data ? JSON.parse(data) : [];
-    const deduped = this.dedupeBillsByNumber(bills);
-    if (deduped.length !== bills.length) {
-      this.setAllBills(deduped);
-    }
-    return deduped;
+    return this.billsCache;
   }
 
   setAllBills(bills) {
-    const deduped = this.dedupeBillsByNumber(bills);
-    localStorage.setItem(this.BILLS_KEY, JSON.stringify(deduped));
+    this.billsCache = bills;
   }
 
   addBill(bill) {
-    const bills = this.getAllBills().filter((b) => b.bill_number !== bill.bill_number);
-    bills.push(bill);
-    this.setAllBills(bills);
+    // Remove any existing bill with same bill_number, then add
+    this.billsCache = this.billsCache.filter((b) => b.bill_number !== bill.bill_number);
+    this.billsCache.push(bill);
   }
 
   clearBills() {
-    this.setAllBills([]);
+    this.billsCache = [];
   }
 
   // Stats

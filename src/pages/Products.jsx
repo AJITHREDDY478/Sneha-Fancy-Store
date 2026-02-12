@@ -21,33 +21,26 @@ function Products() {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      console.log('Starting sync...');
       const data = await fetchSheetsData();
-      console.log('Synced products from sheet:', data.products);
       const mapped = mapSheetProducts(data.products);
+      
       const localProducts = storage.getAllProducts();
       const localById = new Map(localProducts.map(p => [p.id, p]));
       
-      // Merge: take sheet data but preserve local timestamps and any missing products
+      // Merge: preserve local items array for bills
       const mergedProducts = mapped.map(sheetProduct => {
         const local = localById.get(sheetProduct.id);
         if (!local) return sheetProduct;
         return {
           ...sheetProduct,
-          created_at: local.created_at,
-          updated_at: local.updated_at
+          created_at: local.created_at || sheetProduct.created_at,
+          updated_at: local.updated_at || sheetProduct.updated_at
         };
       });
       
-      // Keep any local products not in sheet
-      const sheetIds = new Set(mapped.map(p => p.id));
-      const notInSheet = localProducts.filter(p => !sheetIds.has(p.id));
-      const finalProducts = [...mergedProducts, ...notInSheet];
-      
-      console.log('Final merged products:', finalProducts);
-      storage.setAllProducts(finalProducts);
-      setProducts(finalProducts);
-      console.log('Products synced successfully, total:', finalProducts.length);
+      storage.setAllProducts(mergedProducts);
+      setProducts(mergedProducts);
+      console.log('Products synced:', mergedProducts.length);
     } catch (error) {
       console.error('Sync error:', error);
       alert('Could not sync products from Google Sheets: ' + error.message);
@@ -60,41 +53,49 @@ function Products() {
     e.preventDefault();
     setSaving(true);
     
-    if (editing) {
-      storage.updateProduct(editing, {
-        name: form.name,
-        code: form.code,
-        price: parseFloat(form.price),
-        stock: parseInt(form.stock)
-      });
-      
-      const updatedProduct = storage.getAllProducts().find(p => p.id === editing);
-      if (updatedProduct) {
-        upsertProductToSheet(updatedProduct).catch((error) => {
-          console.warn('Product update sync failed.', error);
+    try {
+      if (editing) {
+        const updatedProduct = {
+          ...storage.getAllProducts().find(p => p.id === editing),
+          name: form.name,
+          code: form.code,
+          price: parseFloat(form.price),
+          stock: parseInt(form.stock),
+          updated_at: new Date().toISOString()
+        };
+        
+        await upsertProductToSheet(updatedProduct);
+        storage.updateProduct(editing, {
+          name: form.name,
+          code: form.code,
+          price: parseFloat(form.price),
+          stock: parseInt(form.stock)
         });
+        
+        setEditing(null);
+      } else {
+        const newProduct = {
+          id: uuidv4(),
+          name: form.name,
+          code: form.code || '',
+          price: parseFloat(form.price),
+          stock: parseInt(form.stock),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        await appendProductToSheet(newProduct);
+        storage.addProduct(newProduct);
       }
-      setEditing(null);
-    } else {
-      const newProduct = {
-        id: uuidv4(),
-        name: form.name,
-        code: form.code || '',
-        price: parseFloat(form.price),
-        stock: parseInt(form.stock),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      storage.addProduct(newProduct);
-
-      appendProductToSheet(newProduct).catch((error) => {
-        console.warn('Product sync failed.', error);
-      });
+      
+      setForm({ name: '', code: '', price: '', stock: '' });
+      loadProducts();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Error saving product. Please try again.');
+    } finally {
+      setSaving(false);
     }
-    
-    setForm({ name: '', code: '', price: '', stock: '' });
-    loadProducts();
-    setSaving(false);
   };
 
   const handleEdit = (product) => {
@@ -102,13 +103,16 @@ function Products() {
     setEditing(product.id);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Delete this product?')) {
-      storage.deleteProduct(id);
-      deleteProductFromSheet(id).catch((error) => {
-        console.warn('Product delete sync failed.', error);
-      });
-      loadProducts();
+      try {
+        await deleteProductFromSheet(id);
+        storage.deleteProduct(id);
+        loadProducts();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Error deleting product. Please try again.');
+      }
     }
   };
 

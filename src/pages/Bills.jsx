@@ -45,33 +45,33 @@ function Bills() {
     setSyncing(true);
     try {
       const data = await fetchSheetsData();
-      console.log('Synced bills from sheet:', data.bills);
       const mapped = mapSheetBills(data.bills);
-      if (mapped.length > 0) {
-        const localBills = storage.getAllBills();
-        const localBillsByNumber = new Map(localBills.map((bill) => [bill.bill_number, bill]));
-        const mergedBills = mapped.map((bill) => {
-          const localBill = localBillsByNumber.get(bill.bill_number);
-          if (!localBill) return bill;
-          return {
-            ...bill,
-            items: localBill.items || bill.items,
-            item_ids: localBill.item_ids || bill.item_ids,
-            subtotal: localBill.subtotal ?? bill.subtotal,
-            discount: localBill.discount ?? bill.discount,
-            discount_amount: localBill.discount_amount ?? bill.discount_amount,
-            tax: localBill.tax ?? bill.tax,
-            tax_amount: localBill.tax_amount ?? bill.tax_amount,
-            total: localBill.total ?? bill.total,
-            customer_name: localBill.customer_name || bill.customer_name,
-            customer_phone: localBill.customer_phone || bill.customer_phone
-          };
-        });
-        storage.setAllBills(mergedBills);
-        const sortedBills = mergedBills.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setBills(sortedBills);
-        console.log('Bills synced successfully');
-      }
+      
+      const localBills = storage.getAllBills();
+      const localBillsByNumber = new Map(localBills.map((bill) => [bill.bill_number, bill]));
+      
+      const mergedBills = mapped.map((bill) => {
+        const localBill = localBillsByNumber.get(bill.bill_number);
+        if (!localBill) return bill;
+        return {
+          ...bill,
+          items: localBill.items || bill.items,
+          item_ids: localBill.item_ids || bill.item_ids,
+          subtotal: localBill.subtotal ?? bill.subtotal,
+          discount: localBill.discount ?? bill.discount,
+          discount_amount: localBill.discount_amount ?? bill.discount_amount,
+          tax: localBill.tax ?? bill.tax,
+          tax_amount: localBill.tax_amount ?? bill.tax_amount,
+          total: localBill.total ?? bill.total,
+          customer_name: localBill.customer_name || bill.customer_name,
+          customer_phone: localBill.customer_phone || bill.customer_phone
+        };
+      });
+      
+      storage.setAllBills(mergedBills);
+      const sortedBills = mergedBills.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setBills(sortedBills);
+      console.log('Bills synced successfully');
     } catch (error) {
       console.error('Sync error:', error);
       alert('Could not sync bills from Google Sheets: ' + error.message);
@@ -81,7 +81,7 @@ function Bills() {
   };
 
   const handleClearAll = async () => {
-    if (!confirm('Delete all bills from local storage and Google Sheets? This cannot be undone.')) {
+    if (!confirm('Delete all bills from Google Sheets? This cannot be undone.')) {
       return;
     }
     setClearing(true);
@@ -93,7 +93,7 @@ function Bills() {
       alert('All bills deleted.');
     } catch (error) {
       console.error('Delete bills error:', error);
-      alert('Could not delete bills from Google Sheets. Please update the Apps Script and try again.');
+      alert('Could not delete bills from Google Sheets: ' + error.message);
     } finally {
       setClearing(false);
     }

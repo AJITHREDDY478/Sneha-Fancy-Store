@@ -38,22 +38,9 @@ function AppContent() {
       const data = await fetchSheetsData();
       const mappedProducts = mapSheetProducts(data.products);
       const mappedBills = mapSheetBills(data.bills);
-      const localProducts = storage.getAllProducts();
+      
+      // Merge bills to preserve local items array
       const localBills = storage.getAllBills();
-      
-      // Merge products with local data to preserve timestamps
-      const localProductsById = new Map(localProducts.map((p) => [p.id, p]));
-      const mergedProducts = mappedProducts.map((sheetProduct) => {
-        const localProduct = localProductsById.get(sheetProduct.id);
-        if (!localProduct) return sheetProduct;
-        return {
-          ...sheetProduct,
-          created_at: localProduct.created_at,
-          updated_at: localProduct.updated_at
-        };
-      });
-      
-      // Merge bills with local data to preserve items
       const localBillsByNumber = new Map(localBills.map((bill) => [bill.bill_number, bill]));
       const mergedBills = mappedBills.map((bill) => {
         const localBill = localBillsByNumber.get(bill.bill_number);
@@ -73,29 +60,10 @@ function AppContent() {
         };
       });
       
-      if (mergedProducts.length > 0) {
-        console.log('Background sync: merged products from sheet', mergedProducts.length);
-        storage.setAllProducts(mergedProducts);
-      } else if (localProducts.length > 0) {
-        appendProductsToSheet(localProducts).catch((error) => {
-          console.warn('Background product seed failed.', error);
-        });
-      }
-      if (mergedBills.length > 0) {
-        storage.setAllBills(mergedBills);
-      } else if (localBills.length > 0) {
-        appendBillsToSheet(localBills).catch((error) => {
-          console.warn('Background bill seed failed.', error);
-        });
-      }
-
-      const sheetBillNumbers = new Set(mappedBills.map((bill) => bill.bill_number).filter(Boolean));
-      const missingBills = localBills.filter((bill) => bill.bill_number && !sheetBillNumbers.has(bill.bill_number));
-      if (missingBills.length > 0) {
-        appendBillsToSheet(missingBills).catch((error) => {
-          console.warn('Background bill push failed.', error);
-        });
-      }
+      storage.setAllProducts(mappedProducts);
+      storage.setAllBills(mergedBills);
+      
+      console.log('Synced from Sheets:', mappedProducts.length, 'products,', mergedBills.length, 'bills');
     } catch (error) {
       console.error('Background sheet sync failed:', error);
     } finally {
