@@ -16,9 +16,9 @@ function Products() {
     loadProducts();
   }, []);
 
-    setSelectedProducts(new Set());
   const loadProducts = () => {
     setProducts(storage.getAllProducts());
+    setSelectedProducts(new Set());
   };
 
   const handleSync = async () => {
@@ -116,7 +116,8 @@ function Products() {
         console.error('Error deleting product:', error);
         alert('Error deleting product. Please try again.');
       }
-    
+    }
+  };
 
   const toggleSelectAll = () => {
     if (selectedProducts.size === products.length) {
@@ -160,7 +161,6 @@ function Products() {
     } finally {
       setDeleting(false);
     }
-  };}
   };
 
   return (
@@ -195,7 +195,52 @@ function Products() {
             />
           </div>
           <div className="form-group">
-         div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <label>Product Code</label>
+            <input
+              type="text"
+              value={form.code}
+              onChange={(e) => setForm({ ...form, code: e.target.value })}
+              placeholder="Unique code for lookup"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Price (₹)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Stock</label>
+            <input
+              type="number"
+              value={form.stock}
+              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? 'Saving...' : `${editing ? 'Update' : 'Add'} Product`}
+          </button>
+          {editing && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => { setEditing(null); setForm({ name: '', code: '', price: '', stock: '' }); }}
+              style={{ marginTop: '0.5rem' }}
+            >
+              Cancel
+            </button>
+          )}
+        </form>
+      </div>
+
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ margin: 0 }}>Product List</h2>
           {selectedProducts.size > 0 && (
             <button
@@ -246,52 +291,7 @@ function Products() {
                   </td>
                   <td style={{ width: '27%' }}>{product.name}</td>
                   <td style={{ width: '15%', color: '#666' }}>{product.code || '-'}</td>
-                  <td style={{ width: '18
-            <label>Stock</label>
-            <input
-              type="number"
-              value={form.stock}
-              onChange={(e) => setForm({ ...form, stock: e.target.value })}
-              required
-            />
-          </div>
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Saving...' : `${editing ? 'Update' : 'Add'} Product`}
-          </button>
-          {editing && (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => { setEditing(null); setForm({ name: '', code: '', price: '', stock: '' }); }}
-              style={{ marginTop: '0.5rem' }}
-            >
-              Cancel
-            </button>
-          )}
-        </form>
-      </div>
-
-      <div className="card">
-        <h2>Product List</h2>
-        {products.length === 0 ? (
-          <p>No products yet. Add your first product above!</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th style={{ width: '30%' }}>Name</th>
-                <th style={{ width: '15%' }}>Code</th>
-                <th style={{ width: '20%' }}>Price</th>
-                <th style={{ width: '15%' }}>Stock</th>
-                <th style={{ width: '20%', textAlign: 'center' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map(product => (
-                <tr key={product.id}>
-                  <td style={{ width: '30%' }}>{product.name}</td>
-                  <td style={{ width: '15%', color: '#666' }}>{product.code || '-'}</td>
-                  <td style={{ width: '20%' }}>₹{product.price.toFixed(2)}</td>
+                  <td style={{ width: '18%' }}>₹{product.price.toFixed(2)}</td>
                   <td style={{ width: '15%' }}>{product.stock}</td>
                   <td style={{ width: '20%' }}>
                     <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center', alignItems: 'center' }}>
