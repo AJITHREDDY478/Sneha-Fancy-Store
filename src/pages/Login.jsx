@@ -122,19 +122,6 @@ function Login({ onLogin }) {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-
-        <div style={{
-          marginTop: '1.5rem',
-          paddingTop: '1.5rem',
-          borderTop: '1px solid #eee',
-          fontSize: '0.85rem',
-          color: '#666',
-          textAlign: 'center'
-        }}>
-          <p style={{ margin: '0 0 0.5rem 0' }}>Demo Credentials:</p>
-          <p style={{ margin: '0 0 0.25rem 0' }}>Username: <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '3px' }}>admin</code></p>
-          <p style={{ margin: 0 }}>Check your Google Sheets Users sheet for the password</p>
-        </div>
       </div>
     </div>
   );
